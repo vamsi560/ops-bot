@@ -275,15 +275,16 @@ body {
   padding: 2rem;
 }
 
-/* QA Chat Button - Temporary Position */
+/* QA Chat Button - Center Position for Testing */
 .qa-chat-button {
   position: fixed;
-  top: 30px;
-  right: 30px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 70px;
   height: 70px;
   border-radius: 50%;
-  background: #333;
+  background: #ff4444;
   border: none;
   color: white;
   font-size: 1.5rem;
@@ -348,8 +349,9 @@ body {
 /* QA Chat Modal */
 .qa-chat-modal {
   position: fixed;
-  top: 120px;
-  right: 30px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 400px;
   height: 600px;
   background: white;
