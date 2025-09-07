@@ -81,7 +81,7 @@ app.add_middleware(
         "https://*.vercel.com"   # Vercel custom domains
     ],
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all HTTP methods
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # Allow all HTTP methods
     allow_headers=["*"],  # Allow all headers
 )
 

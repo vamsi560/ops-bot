@@ -3,5 +3,20 @@
   "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/build",
   "installCommand": "cd frontend && npm install",
-  "framework": "create-react-app"
+  "framework": "create-react-app",
+  "functions": {
+    "api/index.py": {
+      "runtime": "python3.9"
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
 }
