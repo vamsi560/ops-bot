@@ -8,10 +8,10 @@ import {
 function App() {
   // State for dashboard data
   const [metrics, setMetrics] = useState({ 
-    activeTickets: 0, 
-    openAlerts: 0, 
-    systemUptime: 0, 
-    compliance: 0 
+    rrf: 0, 
+    bench: 0, 
+    projects: 0, 
+    trainees: 0 
   });
   const [recentRRF, setRecentRRF] = useState([]);
   const [training, setTraining] = useState([]);
@@ -30,10 +30,10 @@ function App() {
       try {
         const data = await getDashboard();
         setMetrics({
-          activeTickets: data.active_rrfs || 0,
-          openAlerts: data.bench_resources || 0,
-          systemUptime: data.active_projects || 0,
-          compliance: data.trainees || 0
+          rrf: data.active_rrfs || 0,
+          bench: data.bench_resources || 0,
+          projects: data.active_projects || 0,
+          trainees: data.trainees || 0
         });
         setRecentRRF(data.recent_rrf_updates || []);
         setTraining(data.training_progress || []);
@@ -66,13 +66,17 @@ function App() {
 
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { id: 'alerts', label: 'Alerts', icon: '🚨' },
-    { id: 'tickets', label: 'Tickets', icon: '🎫' },
-    { id: 'policies', label: 'Policies', icon: '📋' },
+    { id: 'rrfs', label: 'RRFs', icon: '📋' },
+    { id: 'resources', label: 'Resources', icon: '👥' },
+    { id: 'projects', label: 'Projects', icon: '🏗️' },
+    { id: 'training', label: 'Training', icon: '🎓' },
     { id: 'reports', label: 'Reports', icon: '📈' },
-    { id: 'automation', label: 'Automation', icon: '⚙️' },
-    { id: 'knowledge', label: 'Knowledge Base', icon: '📚' }
+    { id: 'settings', label: 'Settings', icon: '⚙️' }
   ];
+
+  const handleTokenSetup = () => {
+    window.open('/api/token-setup', '_blank');
+  };
 
   return (
     <div className="app-container">
@@ -140,68 +144,98 @@ function App() {
 
         {/* Dashboard Content */}
         <main className="dashboard-content">
-          {/* Metrics Grid */}
-          <div className="metrics-grid">
-            <div className="metric-card">
-              <div className="metric-icon">🎫</div>
-              <div className="metric-content">
-                <div className="metric-value">{metrics.activeTickets}</div>
-                <div className="metric-label">Active Tickets</div>
-                <div className="metric-change">+18.2% from last month</div>
+          {activeTab === 'dashboard' && (
+            <>
+              {/* Metrics Grid */}
+              <div className="metrics-grid">
+                <div className="metric-card">
+                  <div className="metric-icon">📋</div>
+                  <div className="metric-content">
+                    <div className="metric-value">{metrics.rrf}</div>
+                    <div className="metric-label">Active RRFs</div>
+                    <div className="metric-change">Resource requests</div>
+                  </div>
+                </div>
+                <div className="metric-card">
+                  <div className="metric-icon">🪑</div>
+                  <div className="metric-content">
+                    <div className="metric-value">{metrics.bench}</div>
+                    <div className="metric-label">Bench Resources</div>
+                    <div className="metric-change">Available resources</div>
+                  </div>
+                </div>
+                <div className="metric-card">
+                  <div className="metric-icon">🏗️</div>
+                  <div className="metric-content">
+                    <div className="metric-value">{metrics.projects}</div>
+                    <div className="metric-label">Active Projects</div>
+                    <div className="metric-change">Ongoing projects</div>
+                  </div>
+                </div>
+                <div className="metric-card">
+                  <div className="metric-icon">🎓</div>
+                  <div className="metric-content">
+                    <div className="metric-value">{metrics.trainees}</div>
+                    <div className="metric-label">Trainees</div>
+                    <div className="metric-change">In training programs</div>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="metric-card">
-              <div className="metric-icon">🚨</div>
-              <div className="metric-content">
-                <div className="metric-value">{metrics.openAlerts}</div>
-                <div className="metric-label">Open Alerts</div>
-                <div className="metric-change">+1 from yesterday</div>
-              </div>
-            </div>
-            <div className="metric-card">
-              <div className="metric-icon">⏰</div>
-              <div className="metric-content">
-                <div className="metric-value">{metrics.systemUptime}%</div>
-                <div className="metric-label">System Uptime</div>
-                <div className="metric-change">last 30 days</div>
-              </div>
-            </div>
-            <div className="metric-card">
-              <div className="metric-icon">✅</div>
-              <div className="metric-content">
-                <div className="metric-value">{metrics.compliance}%</div>
-                <div className="metric-label">Compliance</div>
-                <div className="metric-change">across all policies</div>
-              </div>
-            </div>
-          </div>
 
-          {/* Network Performance Chart */}
-          <div className="chart-section">
-            <div className="chart-card">
-              <div className="chart-header">
-                <h3>Network Performance</h3>
-                <p>Response Time (ms) and Uptime (%) over the last 7 days.</p>
-              </div>
-              <div className="chart-content">
-                <div className="chart-placeholder">
-                  <div className="chart-line"></div>
-                  <div className="chart-labels">
-                    <div className="y-axis-left">
-                      <span>80</span>
-                      <span>120</span>
-                      <span>160</span>
-                    </div>
-                    <div className="y-axis-right">
-                      <span>50</span>
-                      <span>75</span>
-                      <span>100</span>
+              {/* Operations Overview Chart */}
+              <div className="chart-section">
+                <div className="chart-card">
+                  <div className="chart-header">
+                    <h3>Operations Overview</h3>
+                    <p>Resource allocation and project status over the last 7 days.</p>
+                  </div>
+                  <div className="chart-content">
+                    <div className="chart-placeholder">
+                      <div className="chart-line"></div>
+                      <div className="chart-labels">
+                        <div className="y-axis-left">
+                          <span>80</span>
+                          <span>120</span>
+                          <span>160</span>
+                        </div>
+                        <div className="y-axis-right">
+                          <span>50</span>
+                          <span>75</span>
+                          <span>100</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
+            </>
+          )}
+
+          {activeTab === 'settings' && (
+            <div className="settings-content">
+              <div className="settings-card">
+                <h3>OneDrive Integration</h3>
+                <p>Configure your OneDrive connection to access real data from your files.</p>
+                <div className="settings-actions">
+                  <button 
+                    className="settings-button primary"
+                    onClick={handleTokenSetup}
+                  >
+                    <span className="button-icon">🔐</span>
+                    Setup OneDrive Token
+                  </button>
+                  <div className="settings-info">
+                    <p>This will open a setup page where you can:</p>
+                    <ul>
+                      <li>Get your OneDrive access token</li>
+                      <li>Test the connection</li>
+                      <li>Configure the integration</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </main>
       </div>
 

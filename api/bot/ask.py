@@ -1,5 +1,19 @@
 from http.server import BaseHTTPRequestHandler
 import json
+import os
+import sys
+
+# Add the backend directory to the path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'backend'))
+
+try:
+    from config import Config
+    from file_scanner import file_scanner
+    from token_manager import token_manager
+except ImportError:
+    Config = None
+    file_scanner = None
+    token_manager = None
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -14,30 +28,75 @@ class handler(BaseHTTPRequestHandler):
                 self.send_error_response(400, "Question is required")
                 return
             
-            # Simple AI-like responses based on keywords
-            question_lower = question.lower()
-            
-            if any(word in question_lower for word in ['rrf', 'active', 'ticket']):
-                answer = "Currently there are 24 active RRFs in the system. The most recent ones include Senior Developer positions at TechCorp, Project Manager at FinanceInc, and Data Analyst at RetailCo. Would you like me to show you more details about any specific RRF?"
-            elif any(word in question_lower for word in ['training', 'course', 'learn']):
-                answer = "We have several training programs in progress: Agile Methodology (15 trainees, 75% complete), Cloud Computing (8 trainees, 100% complete), and Data Science (12 trainees, 60% complete). Which training program would you like to know more about?"
-            elif any(word in question_lower for word in ['bench', 'resource', 'available']):
-                answer = "There are currently 3 bench resources available. The system uptime is 99.9% and compliance is at 92% across all policies. Would you like me to provide more specific details about bench resources?"
-            elif any(word in question_lower for word in ['help', 'assist', 'support']):
-                answer = "I'm here to help with operations, RRFs, training, and resource management. You can ask me about active tickets, training progress, bench resources, or any other operations-related questions. What would you like to know?"
+            # Get real data from OneDrive to provide accurate responses
+            if file_scanner:
+                scan_result = file_scanner.scan_all_folders()
+                real_data = scan_result["extracted_data"]
+                real_data["total_files"] = scan_result.get("total_items", 0)
+                real_data["data_source"] = scan_result.get("data_source", "onedrive")
             else:
-                answer = f"I understand you're asking about '{question}'. As your Operations AI assistant, I can help with RRFs, training programs, bench resources, and system status. Could you be more specific about what information you need?"
+                real_data = self._get_fallback_data()
+            
+            # Generate response based on real data
+            answer = self._generate_response(question, real_data)
             
             response = {
                 "answer": answer,
                 "confidence": 0.9,
-                "sources": ["Operations Database", "Training Records", "Resource Management System"]
+                "sources": ["OneDrive Operations Data", "SharePoint Files", "Real-time Data"]
             }
             
             self.send_success_response(response)
             
         except Exception as e:
             self.send_error_response(500, f"Bot query failed: {str(e)}")
+    
+    
+    def _get_fallback_data(self):
+        """Return fallback data when OneDrive is not available"""
+        return {
+            "active_rrfs": 0,
+            "bench_resources": 0,
+            "active_projects": 0,
+            "trainees": 0,
+            "file_count": 0,
+            "file_names": [],
+            "data_source": "fallback"
+        }
+    
+    def _generate_response(self, question, data):
+        """Generate response based on real data"""
+        question_lower = question.lower()
+        
+        if any(word in question_lower for word in ['rrf', 'active', 'request']):
+            if data["active_rrfs"] > 0:
+                return f"Based on the files in OneDrive, I found {data['active_rrfs']} RRF-related files. The system is currently processing these files to extract detailed information. Would you like me to provide more specific details about any particular RRF?"
+            else:
+                return "I don't see any RRF files in the OneDrive folder currently. Please ensure RRF files are uploaded to the Operations folder."
+        
+        elif any(word in question_lower for word in ['training', 'course', 'learn']):
+            if data["trainees"] > 0:
+                return f"I found {data['trainees']} training-related files in OneDrive. The system is processing these files to extract training program details. Would you like me to provide more information about specific training programs?"
+            else:
+                return "I don't see any training files in the OneDrive folder currently. Please ensure training files are uploaded to the Operations folder."
+        
+        elif any(word in question_lower for word in ['bench', 'resource', 'available']):
+            if data["bench_resources"] > 0:
+                return f"I found {data['bench_resources']} bench resource files in OneDrive. The system is processing these files to extract resource availability information. Would you like me to provide more details about bench resources?"
+            else:
+                return "I don't see any bench resource files in the OneDrive folder currently. Please ensure resource files are uploaded to the Operations folder."
+        
+        elif any(word in question_lower for word in ['project']):
+            if data["active_projects"] > 0:
+                return f"I found {data['active_projects']} project-related files in OneDrive. The system is processing these files to extract project information. Would you like me to provide more details about active projects?"
+            else:
+                return "I don't see any project files in the OneDrive folder currently. Please ensure project files are uploaded to the Operations folder."
+        
+        elif any(word in question_lower for word in ['help', 'assist', 'support']):
+            return f"I'm here to help with operations data analysis. I can see {data['file_count']} files in the OneDrive folder. I can help you with RRFs, training programs, bench resources, and project information. What would you like to know more about?"
+        
+        else:
+            return f"I understand you're asking about '{question}'. I can see {data['file_count']} files in the OneDrive folder. As your Operations AI assistant, I can help analyze RRFs, training programs, bench resources, and project data. Could you be more specific about what information you need?"
     
     def do_OPTIONS(self):
         self.send_response(200)

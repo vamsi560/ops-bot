@@ -77,6 +77,53 @@ def extract_pdf(file_path):
     except Exception as e:
         return {"error": f"Failed to extract PDF data: {str(e)}"}
 
+def extract_word(file_path):
+    """Extract text from Word files"""
+    try:
+        # Try to use python-docx if available
+        try:
+            from docx import Document
+            doc = Document(file_path)
+            text_content = []
+            paragraph_data = []
+            
+            for para in doc.paragraphs:
+                text = para.text.strip()
+                if text:
+                    text_content.append(text)
+                    paragraph_data.append({
+                        "text": text,
+                        "style": para.style.name if para.style else "Normal"
+                    })
+            
+            # Extract tables if any
+            table_data = []
+            for table in doc.tables:
+                table_rows = []
+                for row in table.rows:
+                    row_data = [cell.text.strip() for cell in row.cells]
+                    table_rows.append(row_data)
+                table_data.append(table_rows)
+            
+            return {
+                "type": "word",
+                "text": "\n".join(text_content),
+                "paragraphs": paragraph_data,
+                "tables": table_data,
+                "total_paragraphs": len(paragraph_data),
+                "total_tables": len(table_data),
+                "total_characters": len("\n".join(text_content))
+            }
+        except ImportError:
+            return {
+                "type": "word",
+                "message": "Word extraction requires python-docx library",
+                "suggestion": "Install python-docx for full Word support",
+                "file_path": file_path
+            }
+    except Exception as e:
+        return {"error": f"Failed to extract Word data: {str(e)}"}
+
 def extract_powerpoint(file_path):
     """Extract text from PowerPoint files"""
     try:
@@ -113,6 +160,8 @@ def extract_file(file_path):
             data = extract_csv(file_path)
         elif ext == ".pdf":
             data = extract_pdf(file_path)
+        elif ext in [".docx", ".doc"]:
+            data = extract_word(file_path)
         elif ext in [".pptx", ".ppt"]:
             data = extract_powerpoint(file_path)
         else:
