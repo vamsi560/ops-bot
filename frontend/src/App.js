@@ -20,7 +20,6 @@ function App() {
 
   useEffect(() => {
     async function fetchDashboard() {
-      setLoading(true);
       setError(null);
       try {
         const data = await getDashboard();
@@ -35,7 +34,6 @@ function App() {
       } catch (err) {
         setError('Failed to load dashboard data');
       }
-      setLoading(false);
     }
     fetchDashboard();
   }, []);
