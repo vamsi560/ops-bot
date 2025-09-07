@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import { 
   askBot,
-  getBotStatus,
-  getDashboard,
-  getCategoryDetails,
-  checkBackendHealth
+  getDashboard
 } from './api';
 
 function App() {
@@ -13,7 +10,6 @@ function App() {
   const [metrics, setMetrics] = useState({ rrf: 0, bench: 0, projects: 0, trainees: 0 });
   const [recentRRF, setRecentRRF] = useState([]);
   const [training, setTraining] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // QA Chat state
