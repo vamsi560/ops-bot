@@ -1,5 +1,5 @@
 // API configuration and functions for the Operations Bot
-const API_BASE_URL = process.env.REACT_APP_API_URL || (process.env.NODE_ENV === 'production' ? 'https://ops-bot-backend.vercel.app/api' : 'http://localhost:8000');
+const API_BASE_URL = process.env.REACT_APP_API_URL || (process.env.NODE_ENV === 'production' ? 'https://ops-bot-backend.vercel.app' : 'http://localhost:8000');
 
 // Helper function to make API requests
 async function apiRequest(endpoint, options = {}) {

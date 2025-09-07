@@ -15,7 +15,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000", 
         "http://127.0.0.1:3000",
-        "https://*.vercel.app",  # Vercel deployments
+        "https://opsbot-mu.vercel.app",  # Your specific frontend URL
+        "https://*.vercel.app",  # All Vercel deployments
         "https://*.vercel.com"   # Vercel custom domains
     ],
     allow_credentials=True,
