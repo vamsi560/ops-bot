@@ -1,33 +1,16 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-import sys
-import os
+from http.server import BaseHTTPRequestHandler
+import json
 
-# Add backend directory to Python path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'backend'))
-
-app = FastAPI()
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000", 
-        "http://127.0.0.1:3000",
-        "https://opsbot-mu.vercel.app",
-        "https://*.vercel.app",
-        "https://*.vercel.com"
-    ],
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
-)
-
-@app.get("/")
-def get_bot_status():
-    """Get bot status"""
-    try:
-        return {
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+        
+        response = {
             "status": "healthy",
             "config_errors": [],
             "categories": ["RRF", "Training", "Projects", "Resources"],
@@ -36,8 +19,12 @@ def get_bot_status():
             "llm_provider": "gemini",
             "llm_model": "gemini-1.5-flash"
         }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get bot status: {str(e)}")
-
-# Vercel serverless function handler
-handler = app
+        
+        self.wfile.write(json.dumps(response).encode())
+    
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()

@@ -1,46 +1,52 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-import sys
-import os
+from http.server import BaseHTTPRequestHandler
+import json
 
-# Add backend directory to Python path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'backend'))
-
-app = FastAPI()
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000", 
-        "http://127.0.0.1:3000",
-        "https://opsbot-mu.vercel.app",
-        "https://*.vercel.app",
-        "https://*.vercel.com"
-    ],
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
-)
-
-class BotQuestionRequest(BaseModel):
-    question: str
-
-@app.post("/")
-async def ask_bot(req: BotQuestionRequest):
-    """Answer bot questions"""
-    try:
-        if not req.question.strip():
-            raise HTTPException(status_code=400, detail="Question is required")
+class handler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
         
-        return {
-            "answer": f"I received your question: '{req.question}'. The Operations Bot is running in simplified mode on Vercel. For full functionality, please ensure all dependencies are properly configured.",
-            "confidence": 0.8,
-            "sources": ["Operations Bot API"]
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Bot query failed: {str(e)}")
-
-# Vercel serverless function handler
-handler = app
+        try:
+            data = json.loads(post_data.decode('utf-8'))
+            question = data.get('question', '')
+            
+            if not question.strip():
+                self.send_error_response(400, "Question is required")
+                return
+            
+            response = {
+                "answer": f"I received your question: '{question}'. The Operations Bot is running in simplified mode on Vercel. For full functionality, please ensure all dependencies are properly configured.",
+                "confidence": 0.8,
+                "sources": ["Operations Bot API"]
+            }
+            
+            self.send_success_response(response)
+            
+        except Exception as e:
+            self.send_error_response(500, f"Bot query failed: {str(e)}")
+    
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+    
+    def send_success_response(self, data):
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode())
+    
+    def send_error_response(self, status_code, message):
+        self.send_response(status_code)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+        error_response = {"detail": message}
+        self.wfile.write(json.dumps(error_response).encode())
